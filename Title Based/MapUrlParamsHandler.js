@@ -75,34 +75,42 @@ define([
     }
   };
 
-function toggleLayers(queryObject, map) {
-  //?layers=My%20Layer%20Title,Title%20With%20Sublayers:0;4;5,-Unwanted%20Title
-  var layerNodeList = LayerStructure.getInstance().getLayerNodes();
-  var arr = queryObject.layers.split(",");
-  var lyr,sublyr,action;
-  for (x = 0, y = arr.length; x < y; x++) {
-    sublyr = false;
-    lyr = arr[x];
-    if (lyr.indexOf('-') !== -1) {
-      lyr = lyr.substr(1);
-      action = false;
-    } else {
-      action = true;
-    }
-    if (lyr.indexOf(':') !== -1) {
-      var newarr = lyr.split(':');
-      lyr = newarr[0];
-      sublyr = newarr[1].split(';');
-    }
-    for (var l = 0, len = layerNodeList.length; l < len; l++) {
-      if (layerNodeList[l].title === lyr) {
-        action? layerNodeList[l].show():layerNodeList[l].hide();
-        if (sublyr) {
-          var subNodes = layerNodeList[l].getSubNodes();
-          for (s = 0, slen = sublyr.length; s < slen; s++) {
-            for (sn = 0, snlen = subNodes.length; sn < snlen; sn++) {
-              if (parseInt(sublyr[s]) === subNodes[sn].subId) {
-                action? subNodes[sn].show():subNodes[sn].hide();
+  function toggleLayers(queryObject, map) {
+    //?layers=My%20Layer%20Title,Title%20With%20Sublayers:0;4;5,-Unwanted%20Title
+    var layerNodeList = LayerStructure.getInstance().getLayerNodes();
+    var arr = queryObject.layers.split(",");
+    var lyr,sublyr,action;
+    for (x = 0, y = arr.length; x < y; x++) {
+      sublyr = false;
+      lyr = arr[x];
+      if (lyr.indexOf(':') !== -1) {
+        var newarr = lyr.split(':');
+        lyr = newarr[0];
+        sublyr = newarr[1].split(';');
+      }
+      if (lyr.indexOf('-') !== -1) {
+        lyr = lyr.substr(1);
+        action = false;
+      } else {
+        action = true;
+      }
+      for (var l = 0, len = layerNodeList.length; l < len; l++) {
+        if (layerNodeList[l].title === lyr) {
+          action? layerNodeList[l].show():layerNodeList[l].hide();
+          if (sublyr) {
+            var subNodes = layerNodeList[l].getSubNodes();
+            var subaction;
+            for (s = 0, slen = sublyr.length; s < slen; s++) {
+              if (sublyr[s].indexOf('-') !== -1) {
+                sublyr[s] = sublyr[s].substr(1);
+                subaction = false;
+              } else {
+                subaction = true;
+              }
+              for (sn = 0, snlen = subNodes.length; sn < snlen; sn++) {
+                if (parseInt(sublyr[s]) === subNodes[sn].subId) {
+                  subaction? subNodes[sn].show():subNodes[sn].hide();
+                }
               }
             }
           }
@@ -110,7 +118,6 @@ function toggleLayers(queryObject, map) {
       }
     }
   }
-}
 
   function setCenter(queryObject, map){
     //?center=-13044705.25,4036227.41,102113&level=12 or ?center=-13044705.25;4036227.41;102113&level=12
