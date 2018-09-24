@@ -76,46 +76,59 @@ define([
   };
 
   function toggleLayers(queryObject, map) {
-    //?layers=My%20Layer%20Title,Title%20With%20Sublayers:0;4;5,-Unwanted%20Title
-    var layerNodeList = LayerStructure.getInstance().getLayerNodes();
+    //?layers=My%20Layer%20Title,Title%20With%20Sublayers:0;4;-5,-Unwanted%20Title
     var arr = queryObject.layers.split(",");
-    var lyr,sublyr,action;
+    var svc,lyr,action;
     for (x = 0, y = arr.length; x < y; x++) {
-      sublyr = false;
-      lyr = arr[x];
-      if (lyr.indexOf(':') !== -1) {
-        var newarr = lyr.split(':');
-        lyr = newarr[0];
-        sublyr = newarr[1].split(';');
+      lyr = false;
+      svc = arr[x];
+      if (svc.indexOf(':') !== -1) {
+        var newarr = svc.split(':');
+        svc = newarr[0];
+        lyr = newarr[1].split(';');
       }
-      if (lyr.indexOf('-') !== -1) {
-        lyr = lyr.substr(1);
+      if (svc.indexOf('-') !== -1) {
+        svc = svc.substr(1);
         action = false;
       } else {
         action = true;
       }
+      toggleLayer(svc, action, lyr);
+    }
+    function toggleLayer(service, action, lyrs){
+      var layerNodeList = LayerStructure.getInstance().getLayerNodes();
       for (var l = 0, len = layerNodeList.length; l < len; l++) {
-        if (layerNodeList[l].title === lyr) {
+        if (layerNodeList[l].title === service) {
           action? layerNodeList[l].show():layerNodeList[l].hide();
-          if (sublyr) {
-            var subNodes = layerNodeList[l].getSubNodes();
-            var subaction;
-            for (s = 0, slen = sublyr.length; s < slen; s++) {
-              if (sublyr[s].indexOf('-') !== -1) {
-                sublyr[s] = sublyr[s].substr(1);
-                subaction = false;
-              } else {
-                subaction = true;
-              }
-              for (sn = 0, snlen = subNodes.length; sn < snlen; sn++) {
-                if (parseInt(sublyr[s]) === subNodes[sn].subId) {
-                  subaction? subNodes[sn].show():subNodes[sn].hide();
-                }
-              }
-            }
+          if (lyrs) toggleSubNode(layerNodeList[l], lyrs);
+        }
+      }
+    }
+    function toggleSubNode(layerNodeList, layers){
+      var lyrSubNodes = layerNodeList.getSubNodes();
+      var lyrAction;
+      for (s = 0, slen = layers.length; s < slen; s++) {
+        if (lyr[s].indexOf('-') !== -1) {
+          layers[s] = layers[s].substr(1);
+          lyrAction = false;
+        } else {
+          lyrAction = true;
+        }
+        for (sn = 0, snlen = lyrSubNodes.length; sn < snlen; sn++) {
+          if (parseInt(layers[s]) === lyrSubNodes[sn].subId) {
+            lyrAction? lyrSubNodes[sn].show():lyrSubNodes[sn].hide();
+          } else {
+            toggleNested(lyrSubNodes[sn], layers[s], lyrAction);
           }
         }
       }
+    }
+    function toggleNested(subNode, lyrNode, layerAction){
+        for(nsl=0,nslLen=subNode._layerInfo.newSubLayers.length;nsl<nslLen;nsl++ ){
+          if(parseInt(lyrNode) === subNode._layerInfo.newSubLayers[nsl].subId){
+            layerAction? subNode._layerInfo.newSubLayers[nsl].show():subNode._layerInfo.newSubLayers[nsl].hide();
+          }
+        }
     }
   }
 
